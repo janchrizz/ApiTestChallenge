@@ -1,15 +1,5 @@
-import requests
-import json
-import asyncio
-import time
-
-GET_ACCESSTOKEN_URL = 'https://%s:%s@api.up42.com/oauth/token'
-CREATE_WORKFLOW_URL = 'https://api.up42.com/projects/%s/workflows'
-GET_SPECIFIC_WORKFLOW_URL = 'https://api.up42.com/projects/%s/workflows/%s'
-CHECK_JOB_STATUS_URL = 'https://api.up42.com/projects/%s/jobs/%s'
-DELETE_WORKFLOW_URL = 'https://api.up42.com/projects/%s/workflows/%s'
-ADD_TASK_TO_WORKFLOW_URL = 'https://api.up42.com/projects/%s/workflows/%s/tasks'
-CREATE_RUN_JOB_FOR_WORKFLOW_URL = 'https://api.up42.com/projects/%s/workflows/%s/jobs'
+import requests, json, time
+from Modules.constants import *
 
 def get_access_token(project_id, project_api_key):
 	"""
@@ -21,8 +11,8 @@ def get_access_token(project_id, project_api_key):
 		Returns: 
 			The Access Token as a string
 	"""
-	url = GET_ACCESSTOKEN_URL % (project_id, project_api_key)
-	#url = f'https://{project_id}:{project_api_key}@api.up42.com/oauth/token'
+	url = f'https://{project_id}:{project_api_key}@{BASE_URI}/oauth/token'
+	#url = GET_ACCESSTOKEN_URL % (project_id, project_api_key)
 	headers = {'Content-Type' : 'application/x-www-form-urlencoded'}
 	body = 'grant_type=client_credentials'
 	response = requests.post(url, headers=headers, data=body)
@@ -47,8 +37,8 @@ def create_workflow(token, project_id, name, description):
 		Returns: 
 			The response object 
 	"""
-	url = CREATE_WORKFLOW_URL % (project_id)
-	#url = f'https://api.up42.com/projects/{project_id}/workflows/'
+	url = f'https://{BASE_PROJECT_URI}/{project_id}/workflows'
+	#url = CREATE_WORKFLOW_URL % (project_id)
 	headers = {'Authorization': f'Bearer {token}', 'Content-Type' : 'application/json'}
 	body = {"name": f"{name}", "description": f"{description}"}
 	response = requests.post(url, headers=headers, json=body)
@@ -65,7 +55,8 @@ def get_specific_workflow(token, project_id, workflow_id):
 		Returns: 
 			The response object 
 	"""
-	url = GET_SPECIFIC_WORKFLOW_URL % (project_id, workflow_id)
+	url = f'https://{BASE_PROJECT_URI}/{project_id}/workflows/{workflow_id}'
+	#url = GET_SPECIFIC_WORKFLOW_URL % (project_id, workflow_id)
 	headers = {'Authorization': f'Bearer {token}'}
 	response = requests.get(url, headers=headers)
 	return response
@@ -81,8 +72,8 @@ def check_job_status(token, project_id, job_id):
 		Returns: 
 			The response object 
 	"""
-	url = CHECK_JOB_STATUS_URL % (project_id, job_id)
-	#url = f'https://api.up42.com/projects/{project_id}/jobs/{job_id}'
+	url = f'https://{BASE_PROJECT_URI}/{project_id}/jobs/{job_id}'
+	#url = CHECK_JOB_STATUS_URL % (project_id, job_id)
 	headers = {'Authorization': f'Bearer {token}'}
 	response = requests.get(url, headers=headers)
 	return response
@@ -99,7 +90,8 @@ def add_tasks_to_workflow(token, project_id, workflow_id, request_body):
 		Returns:
 			The response object 
 	"""
-	url = ADD_TASK_TO_WORKFLOW_URL % (project_id, workflow_id)
+	url = f'https://{BASE_PROJECT_URI}/{project_id}/workflows/{workflow_id}/tasks'
+	#url = ADD_TASK_TO_WORKFLOW_URL % (project_id, workflow_id)
 	headers = {'Authorization': f'Bearer {token}', 'Content-Type' : 'application/json'}
 	response = requests.post(url, headers=headers, data=request_body)
 	return response
@@ -118,7 +110,8 @@ def create_and_run_job_for_workflow(token, project_id, workflow_id, request_body
 		Returns:
 			The response object 
 	"""
-	url = CREATE_RUN_JOB_FOR_WORKFLOW_URL % (project_id, workflow_id)
+	url = f'https://{BASE_PROJECT_URI}/{project_id}/workflows/{workflow_id}/jobs'
+	#url = CREATE_RUN_JOB_FOR_WORKFLOW_URL % (project_id, workflow_id)
 	headers = {'Authorization': f'Bearer {token}', 'Content-Type' : 'application/json'}
 	response = requests.post(url, headers=headers, json=request_body)
 	return response
@@ -134,8 +127,45 @@ def delete_workflow(token, project_id, workflow_id):
 		Returns:
 			The response object 
 	"""
-	url = DELETE_WORKFLOW_URL % (project_id, workflow_id)
-	#url = f'https://api.up42.com/projects/{project_id}/workflows/{workflow_id}'
+	url = f'https://{BASE_PROJECT_URI}/{project_id}/workflows/{workflow_id}'
+	#url = DELETE_WORKFLOW_URL % (project_id, workflow_id)
 	headers = {'Authorization': f'Bearer {token}'}
 	response = requests.delete(url, headers=headers)
 	return response
+
+def wait_until_job_is_complete(token, project_id, job_id, max_wait_seconds):
+	"""
+	Periodically checks the job status of an existing Job inside a Project
+		Parameters:
+			token (string): Access Token associated to the project
+			project_id (string): Id associated to the project
+			job_id (string): Id associated to the job that is being checked
+			max_wait_seconds (int): Maximum amount of time (in seconds) user is willing to wait
+
+		Returns:
+			Boolean. True if job is completed in the max time alotted. False if otherwise.
+	"""
+	is_complete = False
+	start_time = time.time()
+	try:
+		while not (is_complete):
+			#Check if elapsed time exceeds max waiting time
+			elapsed = time.time() - start_time
+			if(elapsed > max_wait_seconds):
+				return False
+
+			#Calls the Check Job Status API
+			res = check_job_status(token, project_id, job_id)
+
+			#If response body status is SUCCEEDED, job has completed
+			if(res.json()['data']['status'] == 'SUCCEEDED'):
+				return True
+
+			#Wait 3 seconds before checking again
+			time.sleep(3)
+
+	except Exception as e:
+		#If any exception is encountered, return False
+		print("Wait For Job: Exception Occurs - " + e)
+		return False
+	return is_complete

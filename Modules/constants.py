@@ -1,0 +1,6 @@
+BASE_URI = 'api.up42.com'
+BASE_PROJECT_URI = f'{BASE_URI}/projects'
+NASA_MODIS_BLOCK_ID = 'ef6faaf5-8182-4986-bce4-4f811d2745e5'
+SHARPENING_FILTER_BLOCK_ID = 'e374ea64-dc3b-4500-bb4b-974260fb203e'
+MODIS_SHARPENING_TEST_JSON_FILE = 'TestData/modis_sharpening_job.json'
+MODIS_SHARPENING_TEST_JSON_FILE_INVALID = 'TestData/modis_sharpening_job_bad_schema.json'
