@@ -8,7 +8,9 @@ This automation test is written using Python with the PyTest framework that exec
 
 # Getting the Project
 1. Open the command line or terminal
-2. Clone this repository using `git clone https://github.com/janchrizz/ApiTestChallenge`
+2. Navigate to your intended directory
+3. Clone this repository using `git clone https://github.com/janchrizz/ApiTestChallenge`
+4. Alternatively, you can download the zip instead
 
 # How to Configure
 For this purpose, the only configuration needed to be set up is the config.ini file.
@@ -27,7 +29,7 @@ First, you need the project id and the project api key of your associated projec
 
 # Running the Test
 1. Open command line or terminal
-2. Navigate to the working directory of the test project
+2. Navigate to the working directory of the test project (ApiTestChallenge root folder)
 3. Run `python -m pytest -rA` to execute the tests and view the results in the console. A short summary of the name of each test and result will be displayed.
 <br/> You can also add the `-s` flag to view (if any) stdout of each test
 4. To run individual tests, first list the tests available by running 
