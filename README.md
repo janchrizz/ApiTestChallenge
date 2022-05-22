@@ -16,6 +16,7 @@ First, you need the project id and the project api key of your associated projec
 1. Open config.ini with any editor
 2. Edit project_id value to your project's id
 3. Edit project_api_key value to your project's api key value
+
 <br/>Note: When filling the values, no quotes are needed, for example
 <br/>`project_id = abcd123-efg45`
 
